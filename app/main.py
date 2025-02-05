@@ -1,14 +1,13 @@
-
-
+# app/main.py
 from fastapi import FastAPI
-from app.controllers import user  # Solo importa el controlador de actualización
-from app.docs import swagger_router  # Importar swagger_router
+from app.controllers import user  # Importa el controlador de usuario
+from app.database import engine
+from app.models import Base
 
-app = FastAPI(
-    title="API de actualización de usuarios",
-    description="Microservicio para la actualización de usuarios",
-    version="1.0.0",
-)
+app = FastAPI()
 
-# Incluir las rutas de actualización de usuarios
+# Crear las tablas en la base de datos
+Base.metadata.create_all(bind=engine)
+
+# Incluir las rutas de usuario
 app.include_router(user.router)
