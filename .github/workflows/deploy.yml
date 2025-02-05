@@ -1,0 +1,53 @@
+name: CI/CD to EC2
+
+on:
+  push:
+    branches: [ "qa" ]
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker Image
+        run: docker build -t karolpineda/microservice-create-user:latest .
+
+      - name: Push Docker Image
+        run: docker push karolpineda/microservice-create-user:latest
+
+  deploy-to-ec2:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            # 1) Bajar la imagen de Docker Hub
+            docker pull karolpineda/microservice-create-user:latest
+
+            # 2) Detener y eliminar contenedor previo
+            docker stop user_container || true
+            docker rm user_container || true
+
+            # 3) Generar archivo .env con secretos
+            echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
+            echo "DB_PORT=${{ secrets.DB_PORT }}" >> .env
+            echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+            echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+            echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
+            echo "PORT=${{ secrets.PORT }}" >> .env
+
+            # 4) Correr contenedor usando el archivo .env
+            docker run -d --name user_container \
+              --env-file .env \
+              -p 8089:8089 \
+              karolpineda/microservice-create-user:latest
