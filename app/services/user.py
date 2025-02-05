@@ -15,21 +15,19 @@ def hash_password(password: str):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-# Crear un nuevo usuario
-def create_user(db: Session, user: UserCreate):
-    hashed_password = hash_password(user.password)  # Hashear la contraseña
-    db_user = User(id=str(uuid.uuid4()),  # Generar UUID
-                   first_name=user.first_name, last_name=user.last_name, 
-                   email=user.email, password=hashed_password)  # Guardar la contraseña hasheada
-    db.add(db_user)
+# Función para actualizar un usuario
+def update_user(db: Session, user_id: str, user: UserCreate):
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    db_user.first_name = user.first_name
+    db_user.last_name = user.last_name
+    db_user.email = user.email
+
+    if user.password:  # Si se quiere actualizar la contraseña
+        db_user.password = hash_password(user.password)
+    
     db.commit()
     db.refresh(db_user)
     return db_user
-
-# Obtener un usuario por correo electrónico
-def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
-
-# Obtener un usuario por ID
-def get_user_by_id(db: Session, user_id: str):
-    return db.query(User).filter(User.id == user_id).first()
