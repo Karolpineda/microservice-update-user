@@ -6,6 +6,11 @@ from app.services.user import update_user, get_user_by_id
 
 
 router = APIRouter()
+# Ruta Health para verificar si el microservicio está activo
+@router.get("/health")
+def health_check():
+    return {"status": "Microservice Users is up and running"}
+
 
 # Ruta para actualizar un usuario
 @router.put("/users/{user_id}", response_model=schemas.UserOut)
