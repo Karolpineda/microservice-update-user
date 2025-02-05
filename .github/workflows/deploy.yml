@@ -15,10 +15,10 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker Image
-        run: docker build -t karolpineda/microservice-create-user:latest .
+        run: docker build -t karolpineda/microservice-update-user:latest .
 
       - name: Push Docker Image
-        run: docker push karolpineda/microservice-create-user:latest
+        run: docker push karolpineda/microservice-update-user:latest
 
   deploy-to-ec2:
     needs: build-and-push-image
@@ -32,7 +32,7 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           script: |
             # 1) Bajar la imagen de Docker Hub
-            docker pull karolpineda/microservice-create-user:latest
+            docker pull karolpineda/microservice-update-user:latest
 
             # 2) Detener y eliminar contenedor previo
             docker stop user_container || true
@@ -49,5 +49,5 @@ jobs:
             # 4) Correr contenedor usando el archivo .env
             docker run -d --name user_container \
               --env-file .env \
-              -p 8089:8089 \
-              karolpineda/microservice-create-user:latest
+              -p 8090:8090 \
+              karolpineda/microservice-update-user:latest
