@@ -35,8 +35,8 @@ jobs:
             docker pull karolpineda/microservice-update-user:latest
 
             # 2) Detener y eliminar contenedor previo
-            docker stop user_container || true
-            docker rm user_container || true
+            docker stop update_user_container || true
+            docker rm update_user_container || true
 
             # 3) Generar archivo .env con secretos
             echo "DB_HOST=${{ secrets.DB_HOST }}" > .env
@@ -47,7 +47,7 @@ jobs:
             echo "PORT=${{ secrets.PORT }}" >> .env
 
             # 4) Correr contenedor usando el archivo .env
-            docker run -d --name user_container \
+            docker run -d --name update_user_container \
               --env-file .env \
               -p 8090:8090 \
               karolpineda/microservice-update-user:latest
